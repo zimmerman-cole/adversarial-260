@@ -1,0 +1,6 @@
+src/private.py
+*.pyc
+*.ipynb_checkpoints/
+*.swo
+*.swp
+
