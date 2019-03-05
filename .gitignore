@@ -3,4 +3,5 @@ src/private.py
 *.ipynb_checkpoints/
 *.swo
 *.swp
-
+D:/
+tmp/
