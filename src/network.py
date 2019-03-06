@@ -5,7 +5,33 @@ from copy import deepcopy
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
+from torch.nn import functional
 
+
+class LeNet(nn.Module):
+    """
+    From pytorch/examples/mnist on GitHub.
+    """
+    
+    def __init__(self, p=0.5):
+        super(LeNet, self).__init__()
+        
+        self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
+        self.conv2 = nn.Conv2d(10, 20, kernel_size=5)
+        self.conv2_drop = nn.Dropout2d(p=p)
+        
+        self.fc1 = nn.Linear(320, 50)
+        self.fc2 = nn.Linear(50, 10)
+
+    def forward(self, x):
+        x = functional.relu(functional.max_pool2d(self.conv1(x), 2))
+        x = functional.relu(functional.max_pool2d(self.conv2_drop(self.conv2(x)), 2))
+        x = x.view(-1, 320)
+        x = functional.relu(self.fc1(x))
+        x = functional.dropout(x, training=self.training)
+        x = self.fc2(x)
+        return functional.log_softmax(x, dim=1)
+    
 
 class CNN(nn.Module):
     """
@@ -61,6 +87,7 @@ class CNN(nn.Module):
         
         return probs
     
+    
 
 def get_output_size_2d(layers, in_size):
     """
@@ -95,8 +122,8 @@ def get_output_size_2d(layers, in_size):
 
 
 def train_CNN(
-    model, train_data, optimizer, loss, num_epochs, batch_size, valid_data=None, verbose=False,
-    valid_stop_threshold=0.001
+    model, train_data, optimizer, loss, num_epochs, batch_size, scheduler=None, valid_data=None, 
+    valid_stop_threshold=0.001, verbose=False, epoch_hooks=[], batch_hooks=[]
 ):
     """
     Train convolutional neural network for given number of epochs.
@@ -120,6 +147,9 @@ def train_CNN(
     
     try:
         for epoch in range(num_epochs):
+            for hook in epoch_hooks:
+                hook(model, stats, epoch)
+            
             if verbose:
                 print('=='*40)
                 print('Epoch [%d/%d]' % (epoch, num_epochs))
@@ -145,6 +175,9 @@ def train_CNN(
                 
                 train_loss += batch_loss.data
                 
+                for hook in batch_hooks:
+                    hook(model, stats, epoch, batch_num)
+                
             train_loss /= num_batches
             stats['train_loss'].append(train_loss)
             
@@ -153,12 +186,15 @@ def train_CNN(
                 
             if valid_data is not None:
                 model.eval()
-                y_pred = model.predict(torch.Tensor(X_valid)).argmax(axis=1)
+                y_pred = model(torch.Tensor(X_valid)).detach().numpy().argmax(axis=1)
                 model.train()
 
                 num_correct = len(np.argwhere(y_pred.squeeze() == y_valid.squeeze()))
                 acc = num_correct / y_valid.shape[0]
                 stats['valid_acc'].append(acc)
+                
+                if scheduler is not None:
+                    scheduler.step(acc)
                 
                 if acc > stats['best_model'][1]:
                     stats['best_model'] = (deepcopy(model), acc)
