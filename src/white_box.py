@@ -28,6 +28,6 @@ def fgsm(x, y, model, loss_function, projector, eps, num_steps=1):
         x = x.detach().numpy() + eps * grads.detach().numpy()
         x = projector(x, og_x)  # project back onto constraint space
         
-        print('loss=%.5f' % loss.data)
+#         print('loss=%.5f' % loss.data)
         
     return x

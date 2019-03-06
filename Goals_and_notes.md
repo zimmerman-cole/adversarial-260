@@ -11,6 +11,8 @@
   * If target network similar to example one in blackbox_attack.ipynb, then should just be a matter of copying and pasting blackbox_attack code and modifying a few lines.
 
 # Project flow
+
+## Train target network on non-adversarial data, get non-adversarial test results
 1. Split test data into sets Test 1 (70%) and Test 2 (30%)
   * This will be important when creating and testing adversarial data
 2. Train target on training data (or just use pre-trained model)
@@ -18,6 +20,8 @@
   * Motivation: create a baseline of performance
 4. Get target's accuracy on Test 1
   * Motivation: create a baseline of how network performs on unseen data
+  
+## Test 1 phase
 5. Generate white-box adversarials from Test 1, call it set Test 1-Adv
 6. Get target's accuracy on Test 1-Adv
   * Motivation: "How effective is the white-box attack using previously unseen data?"
@@ -25,6 +29,8 @@
   * This is the defense aspect of the project
 8. Get new-target's accuracy on Test 1-Adv
   * Motivation: "How effective was defensive training in increasing robustness to an identical attack in the future (i.e. using exact same adversarials)?"
+  
+## Test 2 phase
 9. Generate white-box adversarials from Test 2, call it set Test 2-Adv
 10. Get accuracy of new-target on Test 2-Adv
   * Motivation: "How effective was defensive training in increasing robustness to an attack of same type (FGSM), but using unseen data (i.e. using adversarials not used in defensive training)?"
