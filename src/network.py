@@ -207,7 +207,6 @@ def train_CNN(
                         print('Validation accuracy has plateaued. Returning early.')
                         
                     break
-                    
                 
     except KeyboardInterrupt:
         if verbose:
